@@ -24,7 +24,7 @@ define([
 			cell: "string"
 		}, {
 			label: "Email",
-			name: "username",
+			name: "email",
 			cell: "string"
 		},  {
 			label: "Actions",

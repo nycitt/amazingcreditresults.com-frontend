@@ -5,10 +5,16 @@ define([
 	"modules/admin/login/loginView",
 	"common/views/logout",
 
+	"common/layouts/buyer",
+
 	"common/layouts/admin",
 	"modules/admin/manage-buyers/manage-buyers",
 	"modules/admin/manage-sellers/manage-sellers",
 	"modules/admin/manage-owners/manage-owners",
+
+	"modules/buyer/login/login-handler",
+
+	"modules/buyer/inventory/inventory",
 
 	"modules/admin/manage-products/manage-products",
  
@@ -19,15 +25,20 @@ define([
 	loginLayout,
 	adminLoginView,
 	logoutView,
+	
+	buyerLayout,
 
 	adminLayout,
 	adminManageBuyers,
 	adminManageSellers,
 	adminManageOwners,
 
+	buyerLoginView,
+
+	inventoryView,
+
 	adminManageProducts
 ) {
-
 	return Router.extend({
 		hooks: {
 			'M:inactivityTimeout': 'navigateLogout'
@@ -42,17 +53,20 @@ define([
 				'admin/manage-products': adminManageProducts
 			},
 			buyer: {
-
+				'inventory/tier-:tier/limit-:limit': inventoryView,
+				'inventory': inventoryView
 			},
 			login: {
 				'admin/login': adminLoginView,
-				'logout': logoutView
+				'logout': logoutView,
+				'buyer/login/:welcomeKey': buyerLoginView
 			}
 		},
 
 		layouts: {
 			login: loginLayout,
-			admin: adminLayout
+			admin: adminLayout,
+			buyer: buyerLayout
 		},
 
 		navigateLogout: function(){

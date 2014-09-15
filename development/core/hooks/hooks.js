@@ -16,6 +16,12 @@ define([
 
 	var mixin = {	
 		/**
+		 * Mixin the mediator
+		 * @type {[type]}
+		 */
+		Mediator: Mediator,
+
+		/**
 		 * Relays triggers from object located on this view to the current
 		 * view (i.e. when obj.trigger('x') happens this.trigger('obj:x') also happens)
 		 * Will only listen to the triggers described in this.hooks
@@ -26,6 +32,11 @@ define([
 		 * @return {[type]}
 		 */
 		relayTriggers: function(ns, obj) {
+			if(_.isArray(ns)) {
+				_(ns).each(this.relayTriggers);
+				return;
+			} 
+
 			if (!obj) {
 				obj = this[ns];
 			}
@@ -116,6 +127,8 @@ define([
 		saveToPath: function(obj, path, value) {
 			var original = obj;
 
+			path = path.split('.');
+
 			for (var i = 0; i < path.length; i++) {
 				if(i + 1 === path.length) {
 					obj[path[i]] = value;
@@ -131,18 +144,23 @@ define([
 
 		/**
 		 * Merges a list of properties up the prototype chain 
-		 * @todo FIX THIS
+		 * @todo FIX THIS to save to chain
 		 * @param  {[type]} properties [description]
 		 * @return {[type]}            [description]
 		 */
 		mergeSuperProperties: function(properties){
 			_(properties).each(function(property){
 				//this.saveToPath(this, property, this.mergeSuperProperty(property));
-				this[property] = this.mergeSuperProperty(property)
+				this[property] = this._mergeSuperProperty(property)
 			}, this);
 		},
 
-		mergeSuperProperty: function(property) {
+		/**
+		 * Merges a propoerty from the Super prototype chain
+		 * @param  {String} property The property to merge
+		 * @return {Object}          The Merged propertyy
+		 */
+		_mergeSuperProperty: function(property) {
 			var prop = {};
 
 			_(this.getSuperChain().reverse()).each(function(proto) {
@@ -152,6 +170,11 @@ define([
 			return prop;
 		},
 		
+		/**
+		 * Gets the super prototype chain as an array
+		 * @param  {Boolean} excludeSelf Excludes the current prototype
+		 * @return {Array}             The Prototype Chain
+		 */
 		getSuperChain: function(excludeSelf) {
 			var out = [];
 
@@ -200,15 +223,26 @@ define([
 			}, this);
 		},
 
+		/**
+		 * Relays mediator
+		 * @return {[type]} [description]
+		 */
 		relayMediator: function(){
 			this.relayTriggers('Mediator');
 			this.relayTriggers('M', this.Mediator);
-		},
-
-		Mediator: Mediator
+		}
 	};
 
 	return {
+		/**
+		 * Mixes hooks functionality into an object.
+		 * Usage:
+		 * ```
+		 * hooks.mixInto(obj); 
+		 * ```
+		 * @param  {Object} child The object to mix stuff into 
+		 * @return {[type]}       [description]
+		 */
 		mixInto: function(child) {
 			if(child.extend) {
 				child = child.extend(mixin);
@@ -225,6 +259,7 @@ define([
 
 				this.implementHooks();
 				this.insertTriggers(this._insertTriggers);
+
 				this.mergeSuperProperties(this._mergeSuperProperties);
 				this.relayMediator();
 
@@ -234,6 +269,7 @@ define([
 
 				this.trigger.apply(this, ['initialize:after'].concat(out).concat(args));
 
+				
 				return out;
 			}
 			

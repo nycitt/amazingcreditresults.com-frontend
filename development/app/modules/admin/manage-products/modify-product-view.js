@@ -20,6 +20,22 @@ define([
 			if(!this.model) {
 				this.model = new Model
 			}
-		}
+			this.listenToOnce(this.model, 'sync', function(){
+				this.Mediator.trigger('create-product', this.model)
+			})
+		},
+
+		edit: function(model){
+			this.model = model;
+
+			var form = new this.form({
+				templateData: {
+					submitButton: 'Save'
+				},
+				model: model
+			});
+
+			this.addView(form, '.form');
+		},
 	});
 });

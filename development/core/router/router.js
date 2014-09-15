@@ -19,7 +19,7 @@ define([
 		initialize: function() {
 			_(this.pages).each(function(pages, layout) {
 				_(pages).each(function(pageView, route) {
-					var optsArray = route.match(/(\(\?)?:\w+/g);
+					var optsArray = route.match(/(\(\?)?(:\w+)/g);
 
 					//strip #
 					optsArray = _.map(optsArray, function(opt) {
@@ -39,6 +39,8 @@ define([
 			var args = _.argsToArray(arguments);
 
 			this.route(route, function() {
+				args.push(_.argsToArray(arguments));
+
 				this.Mediator.trigger.apply(
 					this.Mediator, 
 					['router:route:before'].concat(args)
@@ -54,7 +56,7 @@ define([
 			});
 		},
 
-		_routePage: function(route, layout, pageView, optsArray) {
+		_routePage: function(route, layout, pageView, optsArray, params) {
 			if (this.currentLayout !== layout) {
 				if (this._currentLayout) {
 					this._currentLayout.close();
@@ -67,7 +69,7 @@ define([
 			var $mainEl = this._currentLayout.$mainEl;
 			var opts = {};
 
-			_.each(arguments, function(arg, i) {
+			_.each(params, function(arg, i) {
 				if (!optsArray[i]) {
 					return;
 				}

@@ -31,25 +31,171 @@ define([
 		 */
 		templateData: null,
 
+		/**
+		 * Merges options from the super chain
+		 * @type {Array}
+		 */
 		_mergeSuperProperties: ['options'],
+		
+		/**
+		 * Inserts before and after triggers for render and for close
+		 * @type {Array}
+		 */
 		_insertTriggers: ['render', 'close'],
 
 		hooks: {
-			'initialize:before': ['_bindMessageCB', '_mergeClassName', '_addInstanceOptions', '_overwriteOptions', '_setupContainers', '_relayModelCollection'],
+			'initialize:before': ['_removeClasses', '_bindMessageCB', '_addInstanceOptions', '_overwriteOptions', '_setupContainers', '_relayModelCollection'],
 			'initialize:after': ['_relayModelCollection', '_renderOnInitialize'],
-			'append:after': ['_renderOnAppend', '_addViews']
+			'append:after': ['_renderOnAppend', '_addViews'],
+			'render:before': ['_mergeClassName']
 		},
 
+		/**
+		 * Propagates a trigger to all the children down the cahin
+		 * @return {[type]} [description]
+		 */
+		propagateToChildren: function() {
+			var args = _.argsToArray(arguments);
+
+			_(this._views).each(function(view, key) {
+				view.trigger.apply(view, args);
+				if (view.propagateToChildren) {
+					view.propagateToChildren.apply(view, args);
+				}
+			}, this);
+		},
+
+		/**
+		 * Appends a view to the object
+		 * If the selector doesn't exist on the object it will simply be 
+		 * appended to the view and the selector will be used as an 
+		 * identifier
+		 * @param {Backbone.View} view     View Instance
+		 * @param {String} selector The selector
+		 */
+		addView: function(view, selector) {
+			//Closes any existing view if it is attached
+			if (this._views[selector]) {
+				this._views[selector].close();
+			}
+
+			//Attaches parentView pointer
+			view.parentView = this;
+			this._views[selector] = view;
+
+			view.trigger.call(view, 'append:before', this);
+			if (this.$el.closest('html').length) {
+				view.trigger.call(view, 'appendInDom:before', this);
+			}
+
+			//If the element does not exist, just append to the parent
+			//and append the class from the selector
+			if(!this.$(selector).length) {
+				this.$el
+					.append(view.$el)
+					.addClass(selector.replace(/\./g, ''));
+			} else {
+				this.$(selector)
+					.html(view.$el);
+			}
+
+			view.trigger.call(view, 'append:after', this);
+			if (this.$el.closest('html').length) {
+				view.trigger.call(view, 'appendInDom:after', this);
+			}
+
+			return view;
+		},
+
+		/**
+		 * Closes all of the subviews. Calls close if there is a close
+		 * Otherwise just calls remove (if there are regular Backbone Views)
+		 * @return {[type]} [description]
+		 */
+		close: function() {
+			_(this._views).each(function(view) {
+				if (view.close) {
+					view.close();
+				} else {
+					view.remove();
+				}
+			});
+			this.remove();
+		},
+
+		/**
+		 * Compiles template data
+		 * @return {[type]} [description]
+		 */
+		render: function() {
+			if (!this.tpl) {
+				return;
+			}
+
+			var data = this.compileTemplateData();
+
+			this.trigger('appendTemplate:before', data);
+
+			this.$el.html(this.tpl(data));
+		},
+
+		/**
+		 * Merges model json, instance's templateData and 
+		 * option's template data
+		 * @return {Object} The data
+		 */
+		compileTemplateData: function(){
+			return _({}).extend(
+				this.model ? this.model.toJSON() : {},
+				this.templateData || {},
+				this.options.templateData || {}
+			);
+		},
+
+		/**
+		 * Appends the Element to a jQuery selector
+		 * @return {[type]} [description]
+		 */
+		appendEl: function() {
+			if (this.appendTo) {
+				this.trigger('append:before');
+				if (this.$el.closest('html').length) {
+					this.trigger('appendInDom:before');
+				}
+
+				this.$el.appendTo(this.appendTo);
+
+				this.trigger('append:after');
+				if (this.$el.closest('html').length) {
+					this.trigger('appendInDom:after');
+				}
+			}
+		},
+
+		/**
+		 * Copies appendTo from options to instance
+		 * @return {[type]} [description]
+		 */
 		_overwriteOptions: function() {
 			_(this).extend(
 				_(this.options).pick(['appendTo'])
 			);
 		},
 
+		/**
+		 * Binds Message Callback to instance
+		 * @return {[type]} [description]
+		 */
 		_bindMessageCB: function() {
 			_(this).bindAll('messageCB');
 		},
 
+		/**
+		 * Returns the message callback with options filled
+		 * @param  {String} message The message to display
+		 * @param  {String} type    Type of message (success, fail, etc)
+		 * @return {[type]}         [description]
+		 */
 		messageCB: function(message, type) {
 			return _(this.message).bind(this, message, type);
 		},
@@ -57,6 +203,15 @@ define([
 		message: function(message, type) {
 			type = type || 'success';
 			this.Mediator.trigger('message', message, type);
+		},
+
+		/**
+		 * By default Backone will apply the classes before rendering
+		 * We only want it to happen on a render
+		 * @return {[type]} [description]
+		 */
+		_removeClasses: function(){
+			this.$el.removeClass(this.className);
 		},
 
 		_mergeClassName: function() {
@@ -70,7 +225,7 @@ define([
 				return memo;
 			}, this.className || '');
 
-			this.$el.attr('class', this.className);
+			this.$el.addClass(this.className);
 		},
 
 		_addInstanceOptions: function(options) {
@@ -122,84 +277,13 @@ define([
 					viewInstance = new view;
 				}
 
+				if(!viewInstance) {
+					return;
+				}
+
 				this.addView(viewInstance, selector);
 
 			}, this);
-		},
-
-		propagateToChildren: function() {
-			var args = _.argsToArray(arguments);
-
-			_(this._views).each(function(view, key) {
-				view.trigger.apply(view, args);
-				if (view.propagateToChildren) {
-					view.propagateToChildren.apply(view, args);
-				}
-			}, this);
-		},
-
-		addView: function(view, selector) {
-			if (this._views[selector]) {
-				this._views[selector].close();
-			}
-
-			view.parentView = this;
-			this._views[selector] = view;
-
-			view.trigger.call(view, 'append:before', this);
-			if (this.$el.closest('html').length) {
-				view.trigger.call(view, 'appendInDom:before', this);
-			}
-
-			this.$(selector).html(view.$el);
-
-			view.trigger.call(view, 'append:after', this);
-			if (this.$el.closest('html').length) {
-				view.trigger.call(view, 'appendInDom:after', this);
-			}
-		},
-
-		close: function() {
-			_(this._views).each(function(view) {
-				if (view.close) {
-					view.close();
-				} else {
-					view.remove();
-				}
-			});
-			this.remove();
-		},
-
-		render: function() {
-			var data = _({}).extend(
-				this.model ? this.model.toJSON() : {},
-				this.templateData || {},
-				this.options.template || {}
-			);
-
-			if (!this.tpl) {
-				return;
-			}
-
-			this.$el.html(
-				this.tpl(data)
-			);
-		},
-
-		appendEl: function() {
-			if (this.appendTo) {
-				this.trigger('append:before');
-				if (this.$el.closest('html').length) {
-					this.trigger('appendInDom:before');
-				}
-
-				this.$el.appendTo(this.appendTo);
-
-				this.trigger('append:after');
-				if (this.$el.closest('html').length) {
-					this.trigger('appendInDom:after');
-				}
-			}
 		}
 	});
 

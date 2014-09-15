@@ -9,7 +9,7 @@ define([
 		endpoints = {
 			"adminLogin": "owner/login",
 			
-			"needToSetPassword": "buyer/needToSetPassword",
+			"needToSetPassword": "buyer/needToSetPassword/:welcomeKey",
 			"buyerLogin": "buyer/login",
 			"buyerSetPassword": "buyer/setPassword",
 			
@@ -25,9 +25,20 @@ define([
 			"resetPassword": "admin/clients/resetPassword/:userId",
 			"sendWelcomeEmail": "admin/clients/welcome/:userId",
 
-			"adminProducts": "owner/products",
+			"manageTradelines": "owner/tradelines",
+
+			"manageProducts": "owner/products",
+			"manageProduct": "owner/products/:id",
 			
-			"tradeline": "tradelines",
+			"tradelinesList": "tradelines",
+
+			"adminTradelines": "owner/tradelines",
+			"adminTradelinesModify": "owner/tradelines/:id",
+
+			"cart": 'cart/tradelines',
+
+			"addCart": 'cart/tradelines',
+			'removeCart': 'cart/tradelines/:id',
 
 			"manageOwner": "admin/owners",
 			"modifyOwner": "admin/owners/:id"

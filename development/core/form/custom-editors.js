@@ -2,11 +2,15 @@ define([
 	'backbone-forms',
 	'hbs!./phone',
 	'hbs!./ssn',
+	'hbs!./currency',
+	'common/formatters',
 	'bootstrap-datepicker'
 ], function(
 	Form,
 	phoneTpl,
-	ssnTpl
+	ssnTpl,
+	currencyTpl,
+	formatters
 ){
 	Form.editors.MultiText = Form.editors.Base.extend({
 		_checkField: function(opts, e) {
@@ -149,7 +153,7 @@ define([
 			this.$('.part-2').val(match[1]);
 			this.$('.part-3').val(match[2]);
 		}
-	})
+	});
 
 	Form.editors.DatePicker = Form.editors.Text.extend({
 		render: function(){
@@ -159,6 +163,28 @@ define([
 			this.$el.datepicker().on('changeDate', function(){
 				$(this).datepicker('hide');
 			});
+
+			return this;
+		}
+	});
+
+	Form.editors.Currency = Form.editors.Base.extend({
+		template: currencyTpl,
+
+		formatter: formatters.CurrencyFormatter,
+
+		getValue: function(){
+			return this.formatter.toRaw(this.$('input').val());
+		},
+		
+		setValue: function(val){
+			this.$('input').val(this.formatter.fromRaw(val));
+		},
+
+		render: function(){
+			this.$el.html(this.template({
+				before: '$'
+			}));
 
 			return this;
 		}

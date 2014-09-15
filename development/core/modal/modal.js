@@ -8,7 +8,12 @@ define([
 ){
 	return view.extend({
 		hooks: {
-			'render:before': ['setOptions']
+			'render:before': ['setOptions'],
+			'close:before': 'hide'
+		},
+
+		events: {
+			'click .save-btn': 'triggerSave'
 		},
 
 		options: {
@@ -30,8 +35,14 @@ define([
 
 		views: {
 			'.modal-body': function(){
-				return new this.mainView;
+				return new this.mainView({
+					model: this.model
+				});
 			}
+		},
+
+		triggerSave: function(){
+			this.trigger('save');
 		},
 
 		activateModal: function(){
@@ -39,10 +50,21 @@ define([
 		},
 
 		show: function(){
+			if(this._showing) {
+				return;
+			}
+
+			this._showing = true;
 			this.$el.modal('show');
 		},
 
 		hide: function(){
+			if(!this._showing) {
+				return;
+			}
+
+			this._showing = true;
+
 			this.$el.modal('hide');
 		}
 	});

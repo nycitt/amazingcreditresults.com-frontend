@@ -44,7 +44,9 @@ define([
 
 		setupForm: function() {
 			if(!this.model && this.FormModel) {
-				this.model =  new this.FormModel
+				this.model =  new this.FormModel;
+				
+				this.relayTriggers('model');
 			}
 
 			Backbone.Validation.bind(this);
@@ -109,7 +111,7 @@ define([
 		},
 
 		destroyForm: function() {
-			this.form.remove();
+			this.form && this.form.remove();
 		}
 	});
 });

@@ -1,14 +1,24 @@
 define([
 	'core/data-table/data-table',
+	'core/data-table/action-buttons-cell',
 	'./product-collection',
-	'core/data-table/action-buttons-cell'
+	'backgrid-select2-cell'
 ], function(
 	DataTable,
-	Collection,
-	ActionButtonsCell
+	ActionButtonsCell,
+	ProductCollection,
+	Select2Cell
 ){
 	return DataTable.extend({
-		Collection: Collection,
+		Collection: ProductCollection,
+		hooks: {
+			'M:create-product': 'addToCollection'
+		},
+
+		addToCollection: function(model){
+			this.collection.add(model);
+		},
+
 		columns: [{
 			name: 'bank',
 			label: 'Bank',
@@ -20,6 +30,23 @@ define([
 		}, {
 			name: 'type',
 			label: 'Type',
+			cell: Backgrid.Extension.Select2Cell.extend({
+				optionValues: ['Visa', 'MasterCard', 'American Express', 'Discover'].map(function(val){
+					return [val, val];
+				})
+			})
+		}, {
+			name: 'reportsTo',
+			label: 'Reports To',
+			cell: Backgrid.Extension.Select2Cell.extend({
+				optionValues: ['Transunion', 'Equifax', 'Experian'].map(function(val){
+					return [val, val];
+				}),
+				multiple: true
+			})
+		}, {
+			name: 'totalAus',
+			label: 'Total AUs',
 			cell: 'string'
 		}, {
 			name: 'notes',

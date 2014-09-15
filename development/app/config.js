@@ -31,8 +31,10 @@ require.config({
 		backgrid: "../libs/backgrid/lib/backgrid",
 		"backbone-deep-model": "../libs/backbone-deep-model/distribution/deep-model",
 		"bootstrap-datepicker": "../libs/bootstrap-datepicker/js/bootstrap-datepicker",
-		"jquery-color": "../libs/jquery-color/jquery.color"
-
+		"jquery-color": "../libs/jquery-color/jquery.color",
+		"numeral": "../libs/numeral/numeral",
+		"backgrid-select2-cell": "../libs/backgrid-select2-cell/backgrid-select2-cell",
+		"select2": "../libs/select2/select2"
 	},
 	map: {
 		"*": {
@@ -94,6 +96,12 @@ require.config({
 		},
 		jquery: {
 			exports: "$"
+		},
+		"backgrid-select2-cell": {
+			deps: ['backgrid', 'select2', 'css!backgrid-select2-cell/../backgrid-select2-cell']
+		},
+		'select2': {
+			deps: ['css!select2/../select2']
 		}
 	},
 	packages: [

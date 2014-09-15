@@ -55,7 +55,9 @@ define([
 			clearTimeout(this.inactivityCounter);
 			clearTimeout(this.warningCounter);
 
-			this.hide();
+			if(this._showing) {
+				this.hide();
+			}
 		},
 
 		resetCounters: function(){

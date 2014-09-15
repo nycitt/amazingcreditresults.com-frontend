@@ -6,7 +6,7 @@ define([
 	Model
 ){
 	return Collection.extend({
-		url: 'adminProducts',
+		url: 'manageProducts',
 		model: Model
 	});
 });

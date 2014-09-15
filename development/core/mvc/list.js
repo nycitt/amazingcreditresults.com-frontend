@@ -7,7 +7,8 @@ define([
 		hooks: {
 			'initialize:before': ['_ensureItemView', 'setupContainer'],
 			'after:render': ['renderCollection'],
-			'collection:add': ['appendView']
+			'collection:add': ['appendView'],
+			'collection:remove': 'removeView'
 		},
 
 		/**
@@ -15,6 +16,8 @@ define([
 		 * @type {Backbone.View}
 		 */
 		itemView: null,
+
+		$listEl: null,
 
 		_ensureItemView: function(){
 			if(!this.itemView) {
@@ -31,11 +34,29 @@ define([
 		},
 
 		appendView: function(model) {
+			var $listEl = this.$listEl ? this.$(this.$listEl) : this.$el;
+
 			this._collectionViews.push(new this.itemView({
 				model: model,
-				appendTo: this.$el,
+				appendTo: $listEl,
 				parentView: this
 			}));
+		},
+
+		removeView: function(model){
+			var cv = this._collectionViews;
+
+			var view = _(cv).findWhere({
+				model: model
+			});
+
+			if(!view) {
+				return;
+			}
+
+			view.remove();
+
+			cv = _(cv).without(view);
 		}
 	});
 })

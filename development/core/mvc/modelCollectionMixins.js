@@ -17,9 +17,13 @@ define([
 		syncing: false,
 
 		hooks: {
-			'initialize:before': ['_listenToSync', '_parseUrl', '_implementAutoFetch'],
+			'initialize:before': ['_copyOptions', '_listenToSync', '_parseUrl', '_implementAutoFetch'],
 			'sync': 'handleServerSuccess',
 			'error': 'handleServerError'
+		},
+
+		_copyOptions: function(model, options) {
+			this.options = options || {};
 		},
 
 		_implementAutoFetch: function(){

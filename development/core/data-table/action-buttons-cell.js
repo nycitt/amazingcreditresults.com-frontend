@@ -24,13 +24,29 @@ define([
 			}
 		},
 
+		hooks: {
+			'initialize:before': 'listenToModel'
+		},
+
+		listenToModel: function(){
+			this.listenTo(this.model, 'destroy', this.removeTooltip)
+		},
+
+		removeTooltip: function(){
+			_(this.$buttons).each(function($button){
+				$button.tooltip('destroy');
+			});
+		},
+
 		edit: function(){
 			this.Mediator.trigger('edit-' + this.resourceName, this.model);
 		},
 
 		'delete': function(){
 			if(confirm("You Sure?")) {
-				this.model.destroy();
+				this.model.destroy({
+					wait: true
+				});
 			}
 		},
 
@@ -38,6 +54,7 @@ define([
 			this.buttons = this.buttons || {};
 
 			var buttons = {};
+			this.$buttons = [];
 
 			_(this.defaultButtons).each(function(button){
 				buttons[button] = this._defaultButtons[button];
@@ -52,10 +69,13 @@ define([
 					'<i class="' + options.icon  + '"></i>' +
 					'</button>'
 				).tooltip({
-					title: options.label
+					title: options.label,
+					container: 'body'
 				}).on('click', function(){
 					this[options.onClick].apply(this);
 				}.bind(this));
+
+				this.$buttons.push($button);
 
 
 				this.$el.append($button);
